@@ -1,3 +1,5 @@
+# 2015-01-26: The project py-Asterisk has been forked from original https://github.com/dw/py-asterisk/ by Mikhail Fast
+
 # 2014-04-15: I have not used Asterisk in a decade. This package urgently needs a new maintainer!
 
 # 2012-11-29: Downloads have been moved to Cheese Shop, to facilitate easier development
