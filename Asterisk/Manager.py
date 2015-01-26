@@ -13,6 +13,7 @@ import os
 import re
 import socket
 import time
+import traceback
 
 import Asterisk
 import Asterisk.Util
@@ -183,6 +184,7 @@ class ZapChannel(BaseChannel):
 class BaseManager(Asterisk.Logging.InstanceLogger):
     'Base protocol implementation for the Asterisk Manager API.'
 
+    # TODO: Move Banners into __init__.py
     _AST_BANNERS = [
         'Asterisk Call Manager/1.0\r\n',
         'Asterisk Call Manager/1.1\r\n',
@@ -207,20 +209,27 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
         self.listen_events = listen_events
         self.events = Asterisk.Util.EventCollection()
         self.timeout = timeout
-
+        self.file = None
         # Configure logging:
         self.log = self.getLogger()
         self.log.debug('Initialising.')
+        self._connect()
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(self.timeout)
-        sock.connect(address)
 
-        self.file = sock.makefile('r+', 0) # line buffered.
-        self.fileno = self.file.fileno
-
-        self.response_buffer = []
-        self._authenticate()
+    def _connect(self):
+        """Make AMI connecton"""
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(self.timeout)
+            sock.connect(self.address)
+            self.file = sock.makefile('r+', 0) # line buffered.
+            self.fileno = self.file.fileno
+            self.response_buffer = []
+            self._authenticate()
+            return 0
+        except Exception as e:
+            traceback.print_exc()
+            return 1
 
 
     def get_channel(self, channel_id):
@@ -236,6 +245,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
 
         banner = self.file.readline()
         if banner not in self._AST_BANNERS:
+            # TODO: Create personal Exception for this case
             raise Exception('banner incorrect; got %r, expected one of %r' %\
                             (banner, self._AST_BANNERS))
 
