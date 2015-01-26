@@ -1,11 +1,11 @@
 '''
 Asterisk Manager and Channel objects.
 '''
+from __future__ import absolute_import
 
 __author__ = 'David Wilson'
 __id__ = '$Id$'
 
-from __future__ import absolute_import
 import datetime
 import errno
 import logging

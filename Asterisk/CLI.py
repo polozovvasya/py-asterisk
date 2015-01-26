@@ -3,11 +3,11 @@
 '''
 Asterisk/CLI.py: Command-line wrapper around the Asterisk Manager API.
 '''
+from __future__ import absolute_import
 
 __author__ = 'David M. Wilson <dw@autosols.com>'
 __id__ = '$Id$'
 
-from __future__ import absolute_import
 import inspect
 import os
 import sys
