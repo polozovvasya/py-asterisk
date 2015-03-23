@@ -192,6 +192,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
         'Asterisk Call Manager/1.3\r\n',
         'Asterisk Call Manager/2.5.0\r\n',
         'Asterisk Call Manager/2.6.0\r\n',
+        'Asterisk Call Manager/2.7.0\r\n',
     ]
 
 
