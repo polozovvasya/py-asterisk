@@ -62,6 +62,9 @@ class PermissionDenied(BaseException):
 
     _error = 'Permission denied'
 
+class UnsupportedVersionError(BaseException):
+    "This exception is raised when AMI version does not exist in Asterisk._AST_BANNERS list"
+
 
 
 
@@ -184,25 +187,15 @@ class ZapChannel(BaseChannel):
 class BaseManager(Asterisk.Logging.InstanceLogger):
     'Base protocol implementation for the Asterisk Manager API.'
 
-    # TODO: Move Banners into __init__.py
-    _AST_BANNERS = [
-        'Asterisk Call Manager/1.0\r\n',
-        'Asterisk Call Manager/1.1\r\n',
-        'Asterisk Call Manager/1.2\r\n',
-        'Asterisk Call Manager/1.3\r\n',
-        'Asterisk Call Manager/2.5.0\r\n',
-        'Asterisk Call Manager/2.6.0\r\n',
-    ]
-
 
     def __init__(self, address, username, secret, listen_events=True,
-            timeout=None):
+            timeout=None, **kwargs):
         '''
         Provide communication methods for the PBX instance running at
         <address>. Authenticate using <username> and <secret>. Receive event
         information from the Manager API if <listen_events> is True.
         '''
-
+        self.check_version = kwargs.get('check_version', False)
         self.address = address
         self.username = username
         self.secret = secret
@@ -244,10 +237,13 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
         'Read the server banner and attempt to authenticate.'
 
         banner = self.file.readline()
-        if banner not in self._AST_BANNERS:
+        if banner not in Asterisk._AST_BANNERS and self.check_version:
             # TODO: Create personal Exception for this case
-            raise Exception('banner incorrect; got %r, expected one of %r' %\
-                            (banner, self._AST_BANNERS))
+            raise UnsupportedVersionError(
+                """This AMI version is not supported!;
+                Got %r, expected one of 
+                %r""" % (banner, Asterisk._AST_BANNERS)
+            )
 
         action = {
             'Username': self.username,
