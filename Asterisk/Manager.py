@@ -7,6 +7,8 @@ from __future__ import absolute_import
 __author__ = 'David Wilson'
 __id__ = '$Id$'
 
+from string import lowercase
+from random import sample
 import datetime
 import errno
 import logging
@@ -279,7 +281,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
         on success. Values from <data> are omitted if they are None.
         '''
 
-        id = str(time.time())  # Assumes microsecond precision for reliability.
+        id = '{}{}'.format(time.time(), ''.join(sample(lowercase, 5)))  # Assumes microsecond precision for reliability.
         lines = ['Action: ' + action, 'ActionID: ' + id]
 
         if data is not None:
@@ -467,7 +469,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
                     # intentional.
                     if packet.ActionID == id:
                         buffer.pop(idx)
-                        packet.pop('ActionID')
+                        # packet.pop('ActionID')
                         return packet
 
             packet = self._read_packet()
@@ -479,7 +481,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
                 raise CommunicationError(packet, 'no ActionID')
 
             elif packet.ActionID == id:
-                packet.pop('ActionID')
+                # packet.pop('ActionID')
                 return packet
 
             else:
