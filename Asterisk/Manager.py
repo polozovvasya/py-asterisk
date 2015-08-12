@@ -302,11 +302,9 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
                         for param in item[1]:
                             lines.append('%s: %s' % (item[0], param))
         self.log.packet('write_action: %r', lines)
-        print('write_action: %r', lines)
         for line in lines:
             self.file.write(line + '\r\n')
             self.log.io('_write_action: send %r', line + '\r\n')
-
         self.file.write('\r\n')
         self.log.io('_write_action: send: %r', '\r\n')
         return id
@@ -481,7 +479,6 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
                         return packet
 
             packet = self._read_packet()
-            print(packet)
             if 'Event' in packet:
                 self._dispatch_packet(packet)
 
