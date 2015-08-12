@@ -274,27 +274,35 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
             ((self.__module__, self.__class__.__name__,
               self.username) + self.address)
 
-    def _write_action(self, action, data=None):
+    def _write_action(self, action, data=None, id=None):
         '''
         Write an <action> request to the Manager API, sending header keys and
         values from the mapping <data>. Return the (string) action identifier
         on success. Values from <data> are omitted if they are None.
         '''
-
-        id = '{}{}'.format(time.time(), ''.join(sample(lowercase, 5)))  # Assumes microsecond precision for reliability.
+        if id is None:
+            id = '{}{}'.format(time.time(), ''.join(sample(lowercase, 5)))  # Assumes microsecond precision for reliability.
         lines = ['Action: ' + action, 'ActionID: ' + id]
 
         if data is not None:
             for item in data.iteritems():
                 if item[1] is not None:
-                    if not isinstance(item[1], list):
+                    if isinstance(item[1], dict) and 'Variable' == item[0]:
+                        for key in item[1].keys():
+                            lines.append(
+                                '{VARIABLE}: {KEY}={VALUE}'.format(
+                                    VARIABLE=item[0],
+                                    KEY=key,
+                                    VALUE=item[1][key]
+                                )
+                            )
+                    elif not isinstance(item[1], list):
                         lines.append('%s: %s' % item)
                     elif isinstance(item[1], list):
                         for param in item[1]:
                             lines.append('%s: %s' % (item[0], param))
-
         self.log.packet('write_action: %r', lines)
-
+        print('write_action: %r', lines)
         for line in lines:
             self.file.write(line + '\r\n')
             self.log.io('_write_action: send %r', line + '\r\n')
@@ -473,7 +481,7 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
                         return packet
 
             packet = self._read_packet()
-
+            print(packet)
             if 'Event' in packet:
                 self._dispatch_packet(packet)
 
@@ -690,9 +698,7 @@ class CoreActions(object):
 
         return self._translate_response(self.read_response(id))
 
-    def Originate(self, channel, context=None, extension=None, priority=None,
-                  application=None, data=None, timeout=None, caller_id=None,
-                  variable=None, account=None, async=None):
+    def Originate(self, channel, **kwargs):
         '''
         Originate(channel, context = .., extension = .., priority = ..[, ...])
         Originate(channel, application = ..[, data = ..[, ...]])
@@ -709,15 +715,36 @@ class CoreActions(object):
 
             <timeout>       Answer timeout for <channel> in milliseconds.
             <caller_id>     Outgoing channel Caller ID.
-            <variable>      channel variable to set (K=V[|K2=V2[|..]]).
+            <variable>      channel variables to set 
+                May be a string(old style, retained for compatibility) "K1=V1|K2=V2"
+                or dict (modern style) {'k1':v1,'k2':v2}
             <account>       CDR account code.
             <async>         Return successfully immediately.
+            <id>        Action id. You can set your own ids for the originate action or get it
+                            from the Manager(usually it generated into _write_action method)
+                            Then you can control Originate status with an OriginateResponse packets.
+                            You should check it into  self.response_buffer
         '''
+        # TODO: make input parameters validation!
+        # For example, Originate a channel 'Local/12345@default\n' leads to the 
+        # malformed raw packet 
 
         # Since channel is a required parameter, no need including it here.
         # As a matter of fact, including it here, generates an AttributeError
         # because 'None' does not have an 'id' attribute which is required in
         # checking equality with an object like channel
+        context = kwargs.get('context', None)
+        extension = kwargs.get('extension', None)
+        priority = kwargs.get('priority', 1)
+        application = kwargs.get('application', None)
+        data = kwargs.get('data', None)
+        timeout = kwargs.get('timeout', 30000) # time in milliseconds, default is 30s
+        caller_id = kwargs.get('caller_id', '')
+        variable = kwargs.get('variable', None)
+        account = kwargs.get('account', None)
+        async = kwargs.get('async', None)
+        id = kwargs.get('id', None)
+
         has_dialplan = None not in (context, extension)
         has_application = application is not None
 
@@ -732,7 +759,15 @@ class CoreActions(object):
         if not channel:
             raise ActionFailed('Originate: you must specify a channel.')
 
-        data = {
+        if isinstance(variable, (str, unicode,)):
+            try:
+                variable = dict([x.split('=') for x in variable.split('|')])
+            except Exception, e:
+                self.log.warning(
+                    'CAN NOT set variables on action Originate! Error {}, Variable is {}'.format(e, variable)
+                )
+                variable = None
+        payload = {
             'Channel': channel,
             'Context': context,
             'Exten': extension,
@@ -741,12 +776,14 @@ class CoreActions(object):
             'Data': data,
             'Timeout': timeout,
             'CallerID': caller_id,
-            'Variable': variable,
             'Account': account,
+            'Variable':variable,
             'Async': int(bool(async))
         }
-
-        id = self._write_action('Originate', data)
+        if id is None:
+            id = self._write_action('Originate', payload)
+        else:
+            self._write_action('Originate', payload, id)
         return self._translate_response(self.read_response(id))
 
     def Originate2(self, channel, parameters):
