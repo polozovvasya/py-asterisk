@@ -10,7 +10,7 @@ try:
 except:
     __revision__ = None
 
-__version__ = '0.1mfast'
+__version__ = '0.1.1'
 __all__ = ['CLI', 'Config', 'Logging', 'Manager', 'Util']
 
 
