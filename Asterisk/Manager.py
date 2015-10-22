@@ -130,9 +130,9 @@ class BaseChannel(Asterisk.Logging.InstanceLogger):
             return self.manager.Getvar(self, variable)
         return self.manager.Getvar(self, variable, default)
 
-    def Hangup(self):
+    def Hangup(self, **kwargs):
         'Hangup this channel.'
-        return self.manager.Hangup(self)
+        return self.manager.Hangup(self, **kwargs)
 
     def Monitor(self, pathname, format, mix):
         'Begin monitoring of this channel into <pathname> using <format>.'
@@ -615,10 +615,14 @@ class CoreActions(object):
         self.log.debug('Getvar() returning %r', value)
         return value
 
-    def Hangup(self, channel):
+    def Hangup(self, channel, **kwargs):
         'Hangup <channel>.'
-
-        id = self._write_action('Hangup', {'Channel': channel})
+        payload = {
+            'Channel': channel,
+            # http://www.voip-info.org/wiki/view/Asterisk+variable+hangupcause
+            'Cause': kwargs.get('cause', 16)
+        }
+        id = self._write_action('Hangup', payload)
         return self._translate_response(self.read_response(id))
 
     def ListCommands(self):
