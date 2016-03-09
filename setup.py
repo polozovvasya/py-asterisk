@@ -15,7 +15,7 @@ setup(
     version='0.5.3.1',
     description='Asterisk Manager API Python interface. Forked by Mikhail Fast',
     author='David Wilson',
-    author_email=('mouseratti@gmail.com', 'dw@botanicus.net',),
+    author_email='mouseratti@gmail.com',
     license='MIT',
     url='https://github.com/mouseratti/py-asterisk/',
     packages=['Asterisk'],
