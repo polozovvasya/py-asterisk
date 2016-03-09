@@ -281,7 +281,8 @@ class BaseManager(Asterisk.Logging.InstanceLogger):
         on success. Values from <data> are omitted if they are None.
         '''
         if id is None:
-            id = '{}{}'.format(time.time(), ''.join(sample(lowercase, 5)))  # Assumes microsecond precision for reliability.
+            # Assumes microsecond precision for reliability.
+            id = '{}{}'.format(time.time(), ''.join(sample(lowercase, 5)))
         lines = ['Action: ' + action, 'ActionID: ' + id]
 
         if data is not None:
@@ -727,8 +728,8 @@ class CoreActions(object):
                             You should check it into  self.response_buffer
         '''
         # TODO: make input parameters validation!
-        # For example, Originate a channel 'Local/12345@default\n' leads to the 
-        # malformed raw packet 
+        # For example, Originate a channel 'Local/12345@default\n' leads to the
+        # malformed raw packet
 
         # Since channel is a required parameter, no need including it here.
         # As a matter of fact, including it here, generates an AttributeError
@@ -739,7 +740,8 @@ class CoreActions(object):
         priority = kwargs.get('priority', 1)
         application = kwargs.get('application', None)
         data = kwargs.get('data', None)
-        timeout = kwargs.get('timeout', 30000) # time in milliseconds, default is 30s
+        # time in milliseconds, default is 30s
+        timeout = kwargs.get('timeout', 30000)
         caller_id = kwargs.get('caller_id', '')
         variable = kwargs.get('variable', None)
         account = kwargs.get('account', None)
@@ -763,9 +765,10 @@ class CoreActions(object):
         if isinstance(variable, (str, unicode,)):
             try:
                 variable = dict([x.split('=') for x in variable.split('|')])
-            except Exception, e:
+            except Exception as e:
                 self.log.warning(
-                    'CAN NOT set variables on action Originate! Error {}, Variable is {}'.format(e, variable)
+                    'CAN NOT set variables on action Originate! Error {}, Variable is {}'.format(
+                        e, variable)
                 )
                 variable = None
         payload = {
@@ -778,7 +781,7 @@ class CoreActions(object):
             'Timeout': timeout,
             'CallerID': caller_id,
             'Account': account,
-            'Variable':variable,
+            'Variable': variable,
             'Async': int(bool(async))
         }
         if id is None:

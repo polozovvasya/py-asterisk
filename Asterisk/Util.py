@@ -13,14 +13,11 @@ import Asterisk
 from Asterisk import Logging
 
 
-
-
 class SubscriptionError(Asterisk.BaseException):
     '''
     This exception is raised when an attempt to register the same (event,
     handler) tuple twice is detected.
     '''
-
 
 
 # This special unique object is used to indicate that an argument has not been
@@ -35,9 +32,8 @@ class Unspecified(object):
 Unspecified = Unspecified()
 
 
-
-
 class AttributeDict(dict):
+
     def __getattr__(self, key):
         return self[key]
 
@@ -48,13 +44,12 @@ class AttributeDict(dict):
         return AttributeDict(self.iteritems())
 
 
-
 class EventCollection(Logging.InstanceLogger):
     '''
     Utility class to allow grouping and automatic registration of event.
     '''
 
-    def __init__(self, initial = None):
+    def __init__(self, initial=None):
         '''
         If <initial> is not None, register functions from the list <initial>
         waiting for events with the same name as the function.
@@ -66,7 +61,6 @@ class EventCollection(Logging.InstanceLogger):
         if initial is not None:
             for func in initial:
                 self.subscribe(func.__name__, func)
-
 
     def subscribe(self, name, handler):
         '''
@@ -83,16 +77,13 @@ class EventCollection(Logging.InstanceLogger):
 
         subscriptions.append(handler)
 
-
     def unsubscribe(self, name, handler):
         'Unsubscribe callable <handler> to event named <name>.'
         self.subscriptions[name].remove(handler)
 
-
     def clear(self):
         'Destroy all present subscriptions.'
         self.subscriptions.clear()
-
 
     def fire(self, name, *args, **kwargs):
         '''
@@ -103,7 +94,6 @@ class EventCollection(Logging.InstanceLogger):
         if name not in self.subscriptions:
             return
 
-
         return_value = None
 
         for subscription in self.subscriptions[name]:
@@ -112,7 +102,6 @@ class EventCollection(Logging.InstanceLogger):
 
         return return_value
 
-
     def copy(self):
         new = self.__class__()
 
@@ -120,7 +109,6 @@ class EventCollection(Logging.InstanceLogger):
             new.subscriptions[name] = []
             for subscription in subscriptions:
                 new.subscriptions[name].append(subscription)
-
 
     def __iadd__(self, collection):
         'Add all the events in <collection> to our collection.'
@@ -134,12 +122,11 @@ class EventCollection(Logging.InstanceLogger):
             for name, handlers in collection.subscriptions.iteritems():
                 for handler in handlers:
                     self.subscribe(name, handler)
-        except Exception, e:
+        except Exception as e:
             self.subscriptions = new.subscriptions
             raise
 
         return self
-
 
     def __isub__(self, collection):
         'Remove all the events in <collection> from our collection.'
@@ -158,11 +145,9 @@ class EventCollection(Logging.InstanceLogger):
             raise
 
         return self
-    
 
 
-
-def dump_packet(packet, file = sys.stdout):
+def dump_packet(packet, file=sys.stdout):
     '''
     Dump a packet in human readable form to file-like object <file>.
     '''
@@ -174,7 +159,6 @@ def dump_packet(packet, file = sys.stdout):
     else:
         file.write('-- Response: %s\n' % packet.pop('Response'))
 
-
     packet = packet.items()
     packet.sort()
 
@@ -184,16 +168,11 @@ def dump_packet(packet, file = sys.stdout):
     file.write('\n')
 
 
-
-
-
-
-def dump_human(data, file = sys.stdout, _indent = 0):
+def dump_human(data, file=sys.stdout, _indent=0):
     scalars = (str, int, float)
     recursive = (dict, list, tuple, AttributeDict)
     indent = lambda a = 0, i = _indent: ('   ' * (a + i))
     Type = type(data)
-
 
     if Type in (dict, AttributeDict):
         items = data.items()

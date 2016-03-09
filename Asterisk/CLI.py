@@ -18,12 +18,8 @@ from Asterisk import Manager
 import Asterisk.Util
 
 
-
-
 class ArgumentsError(BaseException):
     _prefix = 'bad arguments'
-
-
 
 
 def usage(argv0, out_file):
@@ -52,50 +48,45 @@ def usage(argv0, out_file):
 
     ''' % locals()
 
-    out_file.writelines([ line[6:] + '\n' for line in usage.splitlines() ])
+    out_file.writelines([line[6:] + '\n' for line in usage.splitlines()])
 
 
-
-
-def show_actions(action = None):
+def show_actions(action=None):
     if action is None:
-        print
-        print 'Supported actions and their arguments.'
-        print '======================================'
-        print
+        print(
+            """
+Supported actions and their arguments.
+======================================""")
 
     class AllActions(Manager.CoreActions, Manager.ZapataActions):
         pass
 
     methods = [
-        (name, obj) for (name, obj) in inspect.getmembers(AllActions) \
+        (name, obj) for (name, obj) in inspect.getmembers(AllActions)
         if inspect.ismethod(obj) and name[0] != '_'
     ]
 
     if action is not None:
-        methods = [ x for x in methods if x[0].lower() == action.lower() ]
+        methods = [x for x in methods if x[0].lower() == action.lower()]
 
     for name, method in methods:
         arg_spec = inspect.getargspec(method)
         arg_spec[0].pop(0)
-        print '   Action:', name
+        print('Action:', name)
 
         fmt = inspect.formatargspec(*arg_spec)[1:-1]
         if fmt:
-            print 'Arguments:', fmt
+            print('Arguments:', fmt)
 
-        foo = [ x.strip() for x in method.__doc__.strip().splitlines() ]
-        print '           ' + '\n           '.join(foo)
-        print
-
-
+        foo = [x.strip() for x in method.__doc__.strip().splitlines()]
+        print('           ' + '\n           '.join(foo))
 
 
 def execute_action(manager, argv):
     method_name = argv.pop(0).lower()
-    method_dict = dict(\
-        [ (k.lower(), v) for (k, v) in inspect.getmembers(manager) \
-        if inspect.ismethod(v) ])
+    method_dict = dict(
+        [(k.lower(), v) for (k, v) in inspect.getmembers(manager)
+         if inspect.ismethod(v)])
 
     try:
         method = method_dict[method_name]
@@ -108,7 +99,7 @@ def execute_action(manager, argv):
 
     for arg in argv:
         if process_kw and arg == '--':
-            process_kw = False # stop -- processing.
+            process_kw = False  # stop -- processing.
         elif process_kw and arg[:2] == '--' and '=' in arg:
             key, val = arg[2:].split('=', 2)
             kw_args[key] = val
@@ -123,7 +114,7 @@ def command_line(argv):
     Act as a command-line tool.
     '''
 
-    commands = [ 'actions', 'action', 'command', 'usage', 'help' ]
+    commands = ['actions', 'action', 'command', 'usage', 'help']
 
     if len(argv) < 2:
         raise ArgumentsError('please specify at least one argument.')
@@ -132,8 +123,6 @@ def command_line(argv):
 
     if command not in commands:
         raise ArgumentsError('invalid arguments.')
-
-
 
     if command == 'usage':
         return usage(argv[0], sys.stdout)
