@@ -140,7 +140,7 @@ class EventCollection(Logging.InstanceLogger):
             for name, handlers in collection.subscriptions.iteritems():
                 for handler in handlers:
                     self.unsubscribe(name, handler)
-        except Exception, e:
+        except Exception as e:
             self.subscriptions = new.subscriptions
             raise
 
