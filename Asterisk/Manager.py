@@ -7,7 +7,7 @@ from __future__ import absolute_import
 __author__ = 'David Wilson'
 __id__ = '$Id$'
 
-from string import lowercase
+from string import ascii_lowercase as lowercase
 from random import sample
 import datetime
 import errno
